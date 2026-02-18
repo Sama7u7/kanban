@@ -47,7 +47,7 @@
 
                         <div class="mb-4">
                             <label class="block text-sm font-medium text-gray-700">Fecha límite</label>
-                            <input type="date" name="due_date"
+                            <input type="date" name="due_date" required
                                 class="text-gray-400 mt-1 w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                         </div>
 
@@ -162,7 +162,7 @@
 
                                             <div class="mb-4">
                                                 <label class="block text-sm font-medium text-gray-700">Fecha límite</label>
-                                                <input type="date" name="due_date" id="editDueDate"
+                                                <input type="date" name="due_date" id="editDueDate" required
                                                     class="text-gray-700 mt-1 w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                                             </div>
 
@@ -213,6 +213,10 @@
                     @endforelse
                 </tbody>
             </table>
+                    {{-- Links de paginación --}}
+        <div class="mt-4">
+            {{ $tasks->links() }}
+        </div>
 
         </div>
     </div>
