@@ -13,11 +13,11 @@ public function up(): void
 {
     Schema::create('tasks', function (Blueprint $table) {
         $table->id();
-        $table->string('title');
-        $table->text('description')->nullable();
-        $table->date('due_date')->nullable();
-        $table->string('responsible')->nullable();
-        $table->enum('status', ['por_hacer', 'haciendo', 'hecho', 'cancelado'])->default('por_hacer');
+        $table->string('titulo');
+        $table->text('descripcion')->nullable();
+        $table->date('fecha_limite')->nullable();
+        $table->string('responsable')->nullable();
+        $table->enum('estatus', ['por_hacer', 'haciendo', 'hecho', 'cancelado'])->default('por_hacer');
         $table->timestamps();
     });
 }

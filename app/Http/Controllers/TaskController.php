@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use App\Models\Task;
 use Illuminate\Http\Request;
 
 class TaskController extends Controller
@@ -11,7 +11,8 @@ class TaskController extends Controller
      */
     public function index()
     {
-        //
+        $tasks = Task::all();
+        return view('dashboard', compact('tasks'));
     }
 
     /**
@@ -27,10 +28,19 @@ class TaskController extends Controller
      */
     public function store(Request $request)
     {
-        //
-    }
+        $validated = $request->validate([
+            'title'       => 'required|string|max:255',
+            'description' => 'nullable|string|max:255',
+            'responsible' => 'nullable|string|max:255',
+            'due_date'    => 'nullable|date',
+            'status'      => 'required|in:por_hacer,haciendo,hecho,cancelado',
+        ]);
 
-    /**
+        Task::create($validated);
+
+        return redirect()->route('tasks.index')->with('success', 'Actividad creada exitosamente.');
+    }
+        /**
      * Display the specified resource.
      */
     public function show(string $id)
@@ -49,9 +59,19 @@ class TaskController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Task $task)
     {
-        //
+        $request->validate([
+            'title'       => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'responsible' => 'nullable|string|max:255',
+            'due_date'    => 'nullable|date',
+            'status'      => 'required|in:por_hacer,haciendo,hecho,cancelado',
+        ]);
+
+        $task->update($request->all());
+
+        return redirect()->route('tasks.index');
     }
 
     /**
@@ -59,6 +79,9 @@ class TaskController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $tarea = Task::findOrFail($id);
+        $tarea->delete();
+
+         return redirect()->route('tasks.index')->with('success', 'Tarea eliminada con éxito.');
     }
 }
