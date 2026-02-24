@@ -16,26 +16,31 @@
             @endif
 
     </head>
- <body class="bg-background h-screen overflow-hidden flex">
 
-    {{-- Sidebar izquierdo --}}
-    <aside class="w-64 bg-gray-800 flex-shrink-0 flex flex-col">
-        @include('partials.header')
-    </aside>
+    <body class="bg-background h-screen overflow-hidden flex">
+        {{-- Toasts --}}
+        @include('components.toasts')
+        @include('partials.editTaskForm')
+        @include('partials.createTaskForm')
 
-    {{-- Contenido derecho --}}
-    <div class="flex-1 flex flex-col overflow-hidden">
-        <main class="flex-1 overflow-y-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden p-4">
-            <div class="grid grid-cols-12 gap-4">
-                <div class="rounded-sm col-span-12 bg-primary text-white p-4">
-                    @yield('content')
+        {{-- Sidebar izquierdo --}}
+        <aside class="w-64 bg-gray-800 flex-shrink-0 flex flex-col">
+            @include('partials.header')
+        </aside>
+
+        {{-- Contenido derecho --}}
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <main class="flex-1 overflow-y-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden p-4">
+                <div class="grid grid-cols-12 gap-4">
+                    <div class="rounded-sm col-span-12 bg-primary text-white p-4">
+                        @yield('content')
+                    </div>
                 </div>
-            </div>
-        </main>
-        <footer>
-            @yield('footer')
-        </footer>
-    </div>
+            </main>
+            <footer>
+                @yield('footer')
+            </footer>
+        </div>
 
-</body>
+    </body>
 </html>
