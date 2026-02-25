@@ -16,11 +16,11 @@
             <table class="border-separate border-spacing-4 w-full mt-4">
                 <thead>
                     <tr>
-                        <th>Título</th>
+                        <th>Actividad</th>
                         <th>Estatus</th>
                         <th>Responsable</th>
-                        <th>Fecha creación</th>
                         <th>Fecha límite</th>
+                        <th>Solicitante</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
@@ -48,13 +48,23 @@
                                 </span>
                             </td>
                             <td>{{ $task->responsible }}</td>
-                            <td>{{ $task->created_at->format('d/m/Y') }}</td>
                             <td>{{ $task->due_date->format('d/m/Y') }}</td>
+                            <td>{{ $task->requester }}</td>
                             <td class="text-center flex items-center justify-center gap-3 py-2">
+
+                                {{-- Botón Ver informacion --}}
+
+                                <a onclick="abrirModalVer({{ $task->id }}, @js($task->title), @js($task->description), @js($task->responsible), @js($task->requester),'{{ $task->due_date?->format('Y-m-d') }}', @js($task->status))"
+                                class="text-indigo-400 hover:text-indigo-600 cursor-pointer" title="Visualizar">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                </svg>
+                                </a>
 
                                 {{-- Botón Editar --}}
 
-                                <a onclick="abrirModalEditar({{ $task->id }}, @js($task->title), @js($task->description), @js($task->responsible), '{{ $task->due_date?->format('Y-m-d') }}', @js($task->status))"
+                                <a onclick="abrirModalEditar({{ $task->id }}, @js($task->title), @js($task->description), @js($task->responsible), @js($task->requester), '{{ $task->due_date?->format('Y-m-d') }}', @js($task->status))"
                                 class="text-indigo-400 hover:text-indigo-600 cursor-pointer" title="Editar">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 3.487a2.25 2.25 0 113.182 3.182L7.5 19.213l-4.5 1.5 1.5-4.5L16.862 3.487z"/>
@@ -88,20 +98,5 @@
 
         </div>
     </div>
-    <script>
-    function abrirModalEditar(id, title, description, responsible, dueDate, status) {
-        // Llena los campos con la info de la tarea
-        document.getElementById('editTitle').value       = title;
-        document.getElementById('editDescription').value = description;
-        document.getElementById('editResponsible').value = responsible;
-        document.getElementById('editDueDate').value     = dueDate;
-        document.getElementById('editStatus').value      = status;
 
-        // Cambia el action del form con el ID de la tarea
-        document.getElementById('formEditar').action = `/tasks/${id}`;
-
-        // Abre el modal
-        document.getElementById('modalEditar').classList.remove('hidden');
-    }
-</script>
 @endsection

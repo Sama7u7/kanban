@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 use App\Models\Task;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class TaskController extends Controller
@@ -11,8 +12,16 @@ class TaskController extends Controller
      */
     public function index()
     {
-        $tasks = Task::paginate(15);
-        return view('dashboard', compact('tasks'));
+            $tasks = Task::paginate(15);
+          // 2. Usuarios de IT (para el campo Responsable)
+            $itUsers = User::where('role', 'it')->get();
+
+        // 3. Usuarios Solicitantes (para el campo Solicitante)
+            $nonItUsers = User::whereIn('role', [
+                'padre_familia', 'profesor', 'seccion_prim',
+                'seccion_sec', 'seccion_prep', 'seccion_pres'
+            ])->get();
+        return view('dashboard', compact('tasks', 'itUsers', 'nonItUsers'));
     }
 
     /**
@@ -32,6 +41,7 @@ class TaskController extends Controller
             'title'       => 'required|string|max:255',
             'description' => 'nullable|string|max:255',
             'responsible' => 'nullable|string|max:255',
+            'requester' => 'nullable|string|max:255',
             'due_date'    => 'nullable|date',
             'status'      => 'required|in:por_hacer,haciendo,hecho,cancelado',
         ]);
@@ -64,14 +74,15 @@ class TaskController extends Controller
         $request->validate([
             'title'       => 'required|string|max:255',
             'description' => 'nullable|string',
-            'responsible' => 'nullable|string|max:255',
+            'responsible' => 'required|string|max:255',
+            'requester' => 'required|string|max:255',
             'due_date'    => 'nullable|date',
             'status'      => 'required|in:por_hacer,haciendo,hecho,cancelado',
         ]);
 
         $task->update($request->all());
 
-        return redirect()->route('tasks.index');
+        return redirect()->route('tasks.index')->with('success', 'Actividad actualizada exitosamente.');
     }
 
     /**

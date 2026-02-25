@@ -21,6 +21,7 @@
         {{-- Toasts --}}
         @include('components.toasts')
         @include('partials.editTaskForm')
+        @include('partials.viewTaskInfo')
         @include('partials.createTaskForm')
 
         {{-- Sidebar izquierdo --}}

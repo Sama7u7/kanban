@@ -27,14 +27,32 @@
 
                         <div class="mb-4">
                             <label class="block text-sm font-medium text-gray-700">Responsable</label>
-                            <input type="text" name="responsible"
-                                class="text-gray-400 mt-1 w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <select required name="responsible" class="text-gray-400 mt-1 w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                                <option value="" disabled selected>Selecciona un responsable de IT</option>
+                                @foreach ($itUsers as $user)
+                                    <option value="{{ $user->name }}">
+                                        {{ $user->name }}
+                                    </option>
+                                @endforeach
+                            </select>
                         </div>
+
+                            <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700">Solicitante</label>
+                                    <select required name="requester" class="text-gray-400 mt-1 w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                        <option value="" disabled selected>Selecciona quien solicita</option>
+                                    @foreach ($nonItUsers as $user)
+                                        <option value="{{ $user->name }}">
+                                            {{ $user->name }}
+                                        </option>
+                                    @endforeach
+                                        </select>
+                            </div>
 
                         <div class="mb-4">
                             <label class="block text-sm font-medium text-gray-700">Fecha límite</label>
                             <input type="date" name="due_date" required
-                                class="text-gray-400 mt-1 w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            class="text-gray-400 mt-1 w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                         </div>
 
                         <div class="mb-4">
