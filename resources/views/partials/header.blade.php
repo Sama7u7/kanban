@@ -2,22 +2,26 @@
     {{-- Logo y Botón Cerrar (solo móvil) --}}
     <div class="mb-6 flex justify-between items-center">
         <img src="{{ asset('images/logo-in-app.svg') }}" class="h-8 w-auto"/>
-        
+
     </div>
 
     {{-- Links --}}
     <div class="flex flex-col gap-1">
         <a href="{{ route('tasks.index') }}"
-           class="flex items-center rounded-md px-3 py-2.5 text-sm font-medium text-white bg-gray-950/50">
-           Dashboard
+            class="flex items-center rounded-md px-3 py-2.5 text-sm font-medium text-white bg-gray-950/50">
+            Dashboard
         </a>
+
+        @if(auth()->check() && auth()->user()->role === 'it')
+            <a href="{{ route('users.index') }}"
+                class="flex items-center rounded-md px-3 py-2.5 text-sm font-medium text-gray-300 hover:bg-white/5 hover:text-white transition-colors">
+                Usuarios
+            </a>
+        @endif
+
         <a href="#"
-           class="flex items-center rounded-md px-3 py-2.5 text-sm font-medium text-gray-300 hover:bg-white/5 hover:text-white transition-colors">
-           Team
-        </a>
-        <a href="#"
-           class="flex items-center rounded-md px-3 py-2.5 text-sm font-medium text-gray-300 hover:bg-white/5 hover:text-white transition-colors">
-           Projects
+            class="flex items-center rounded-md px-3 py-2.5 text-sm font-medium text-gray-300 hover:bg-white/5 hover:text-white transition-colors">
+            Projects
         </a>
     </div>
 

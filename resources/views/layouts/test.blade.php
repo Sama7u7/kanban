@@ -53,5 +53,8 @@
     @include('partials.createTaskForm')
     @include('partials.editTaskForm')
     @include('partials.viewTaskInfo')
+    @include('partials.createUserForm')
+    @include('partials.editUserForm')
+    @include('partials.viewUserInfo')
 </body>
 </html>
