@@ -107,4 +107,9 @@
             {{ $tasks->links() }}
         </div>
     </div>
+@push('modals')
+    @include('partials.createTaskForm')
+    @include('partials.editTaskForm')
+    @include('partials.viewTaskInfo')
+@endpush
 @endsection

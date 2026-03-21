@@ -32,7 +32,7 @@ class UserController extends Controller
             ]);
 
             // Redirigir a la página de usuarios con un mensaje de éxito
-            return redirect()->route('usuarios.create')->with('success', 'Usuario creado exitosamente.');
+            return redirect()->route('users.create')->with('success', 'Usuario creado exitosamente.');
         }
     // Función para listar los usuarios
         public function index()
@@ -48,29 +48,33 @@ class UserController extends Controller
         }
 
      // Actualiza los datos de un usuario
-        public function update(Request $request, $id)
-        {
-            $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $id,
+       public function update(Request $request, $id)
+{
+    $request->validate([
+        'name' => 'required|string|max:255',
+        'email' => 'required|email|unique:users,email,' . $id,
+        'role' => 'required|in:it,padre_familia,profesor,seccion_prim,seccion_sec,seccion_prep,seccion_pres',
+    ]);
+
+    $usuario = User::findOrFail($id);
+
+    // Actualizar campos básicos
+    $usuario->name = $request->name;
+    $usuario->email = $request->email;
+    $usuario->role = $request->role;
+
+    // Si se envía una contraseña no vacía, actualízala
+    if ($request->filled('password')) {
+        $request->validate([
+            'password' => 'required|string|min:8|confirmed',
         ]);
+        $usuario->password = bcrypt($request->input('password'));
+    }
 
-        $usuario = User::findOrFail($id);
+    $usuario->save();
 
-         // Si se envía una contraseña no vacía, actualízala
-        if ($request->filled('password')) {
-            $request->validate([
-                'password' => 'required|string|min:8|confirmed',
-            ]);
-            $usuario->password = bcrypt($request->input('password'));
-        }
-
-         // Actualizar otros campos
-        $usuario->update($request->except('password'));
-
-        return redirect()->route('users.index')->with('success', 'Usuario actualizado con éxito.');
-        }
-
+    return redirect()->route('users.index')->with('success', 'Usuario actualizado con éxito.');
+}
 
         // Elimina un usuario
         public function destroy($id)
