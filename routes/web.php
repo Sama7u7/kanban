@@ -6,13 +6,16 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\AuthController;
 use App\Http\Middleware\CheckRole;
 
-Route::get('/', function () {return view('welcome');});
+Route::get('/', function () {
+    return view('welcome');
+});
 // Route::get('/dashboard', function () {return view('dashboard');});
 Route::resource('tasks', TaskController::class);
 Route::patch('tasks/{task}/status', [TaskController::class, 'updateStatus'])->name('tasks.updateStatus');
 
-Route::group(['middleware' => ['auth', CheckRole::class.':it']], function () {
+Route::group(['middleware' => ['auth', CheckRole::class . ':it']], function () {
     Route::resource('users', UserController::class);
+    Route::patch('users/{user}/reset-password', [UserController::class, 'resetPassword'])->name('users.resetPassword');
 });
 
 Route::post('/login', [AuthController::class, 'authenticate'])->name('login');

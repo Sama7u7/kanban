@@ -1,7 +1,7 @@
 @extends ('layouts.test')
 
 @section ('content')
-    <h1 class="text-3xl md:text-4xl text-white font-mono pb-8">Tareas</h1>
+    <h1 class="text-3xl md:text-4xl text-white font-mono pb-8">Usuarios</h1>
     <div
         class="border rounded-xl border-gray-700 bg-[#161615]/50 px-4 py-6 md:px-6"
     >

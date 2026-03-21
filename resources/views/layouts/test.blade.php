@@ -28,6 +28,7 @@
         showViewModalUser: false,
         selectedTask: {},
         selectedUser: {},
+        newPassword: '',
     }"
     x-init="
         $nextTick(() => {

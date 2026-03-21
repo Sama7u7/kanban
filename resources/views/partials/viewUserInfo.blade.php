@@ -61,8 +61,46 @@
                 ></p>
             </div>
         </div>
+        <div class="mt-4 border-t border-gray-200 dark:border-white/10 pt-4">
+            <label
+                class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2"
+            >
+                Resetear contraseña
+            </label>
 
-        <div class="mt-8 flex justify-end">
+            <div class="flex gap-2 mb-2">
+                <input
+                    type="text"
+                    x-model="newPassword"
+                    placeholder="Nueva contraseña"
+                    class="flex-1 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white rounded-md px-3 py-2 text-sm"
+                />
+                <button
+                    type="button"
+                    @click="newPassword = Math.random().toString(36).slice(-6)"
+                    class="bg-gray-200 dark:bg-white/10 text-gray-700 dark:text-white px-3 py-2 rounded-md text-sm hover:bg-gray-300 transition"
+                >
+                    Generar
+                </button>
+            </div>
+
+            <form
+                method="POST"
+                :action="`/users/${selectedUser.id}/reset-password`"
+            >
+                @csrf
+                @method ('PATCH')
+                <input type="hidden" name="password" :value="newPassword" />
+                <button
+                    type="submit"
+                    class="mt-2 w-full bg-indigo-600 text-white font-bold px-4 py-2 rounded-md hover:bg-indigo-700 transition text-sm"
+                >
+                    Aplicar contraseña
+                </button>
+            </form>
+        </div>
+
+        <div class="mt-6 flex justify-end">
             <button
                 @click="showViewModalUser = false"
                 class="w-full md:w-auto bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-white font-bold px-8 py-3 rounded-lg hover:bg-gray-200 dark:hover:bg-white/20 transition-all"
