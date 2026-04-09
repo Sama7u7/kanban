@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use App\Models\Task;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -10,20 +11,39 @@ class TaskController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+public function index()
     {
-            $tasks = Task::paginate(15);
-          // 2. Usuarios de IT (para el campo Responsable)
-            $itUsers = User::where('role', 'it')->get();
+        $user = auth()->user();
 
-        // 3. Usuarios Solicitantes (para el campo Solicitante)
-            $nonItUsers = User::whereIn('role', [
+        // 1. FILTRADO DE TAREAS POR PERMISOS
+        $query = Task::with(['responsibleUser', 'requesterUser']);
+
+        // Volvemos a tu método personalizado (sin el "To")
+        if (!$user->hasPermission('view_all_tasks')) {
+            $query->where(function ($q) use ($user) {
+                // Mantenemos la búsqueda por ID por la validación
+                $q->where('responsible', $user->id)
+                  ->orWhere('requester', $user->id);
+            });
+        }
+
+        $tasks = $query->latest()->paginate(15);
+
+        // 2. OBTENER USUARIOS PARA LOS DROPDOWNS
+        // Volvemos a tu lógica original buscando en tu relación de roles
+        $itUsers = User::whereHas('roles', function ($q) {
+            $q->whereIn('name', ['admin', 'it']); 
+        })->get();
+
+        $nonItUsers = User::whereHas('roles', function ($q) {
+            $q->whereIn('name', [
                 'padre_familia', 'profesor', 'seccion_prim',
                 'seccion_sec', 'seccion_prep', 'seccion_pres'
-            ])->get();
-        return view('dashboard', compact('tasks', 'itUsers', 'nonItUsers'));
-    }
+            ]);
+        })->get();
 
+        return view('admin.dashboard', compact('tasks', 'itUsers', 'nonItUsers'));
+    }
     /**
      * Show the form for creating a new resource.
      */
@@ -40,8 +60,9 @@ class TaskController extends Controller
         $validated = $request->validate([
             'title'       => 'required|string|max:255',
             'description' => 'nullable|string|max:255',
-            'responsible' => 'nullable|string|max:255',
-            'requester' => 'nullable|string|max:255',
+            // Validamos que se guarde el ID y exista en la tabla users
+            'responsible' => 'nullable|integer|exists:users,id',
+            'requester'   => 'nullable|integer|exists:users,id',
             'due_date'    => 'nullable|date',
             'status'      => 'required|in:por_hacer,haciendo,hecho,cancelado',
         ]);
@@ -50,10 +71,11 @@ class TaskController extends Controller
 
         return redirect()->route('tasks.index')->with('success', 'Actividad creada exitosamente.');
     }
-        /**
+
+    /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Task $task)
     {
         //
     }
@@ -61,7 +83,7 @@ class TaskController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
+    public function edit(Task $task)
     {
         //
     }
@@ -69,18 +91,21 @@ class TaskController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Task $task)
+    public function update(Request $request, Task $task) // Usamos Route Model Binding
     {
-        $request->validate([
+        // Terminamos la validación que quedó a medias
+        $validated = $request->validate([
             'title'       => 'required|string|max:255',
             'description' => 'nullable|string',
-            'responsible' => 'required|string|max:255',
-            'requester' => 'required|string|max:255',
+            // Unificamos con store() para exigir el mismo tipo de dato
+            'responsible' => 'nullable|integer|exists:users,id',
+            'requester'   => 'nullable|integer|exists:users,id',
             'due_date'    => 'nullable|date',
             'status'      => 'required|in:por_hacer,haciendo,hecho,cancelado',
         ]);
 
-        $task->update($request->all());
+        // Usamos $validated en lugar de $request->all() para mayor seguridad
+        $task->update($validated);
 
         return redirect()->route('tasks.index')->with('success', 'Actividad actualizada exitosamente.');
     }
@@ -88,11 +113,10 @@ class TaskController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Task $task) // Usamos Route Model Binding
     {
-        $tarea = Task::findOrFail($id);
-        $tarea->delete();
+        $task->delete();
 
-         return redirect()->route('tasks.index')->with('success', 'Tarea eliminada con éxito.');
+        return redirect()->route('tasks.index')->with('success', 'Tarea eliminada con éxito.');
     }
 }

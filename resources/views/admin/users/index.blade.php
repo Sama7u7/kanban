@@ -8,7 +8,30 @@
         showViewModalUser: false,
         showPassword: false,
         showPasswordConfirm: false,
-        selectedUser: { id: null, name: '', email: '', role: '', roles: [] }
+        changePassword: false,
+        selectedUser: { id: null, name: '', email: '', roles: [] },
+    
+        {{-- FUNCIÓN ACTUALIZADA: Menos símbolos, más legible --}}
+        generateSecurePassword() {
+            // Eliminamos caracteres confusos como l, 1, I, o, 0, O
+            const chars = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#';
+            let pass = '';
+            for (let i = 0; i < 8; i++) {
+                pass += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return pass;
+        },
+    
+        fillPassword(type) {
+            const newPass = this.generateSecurePassword();
+            if (type === 'create') {
+                this.$refs.passCreate.value = newPass;
+                this.$refs.passConfirmCreate.value = newPass;
+            } else {
+                this.$refs.passEdit.value = newPass;
+            }
+            alert('Contraseña generada: ' + newPass);
+        }
     }" x-cloak>
 
         <h1 class="text-3xl md:text-4xl text-white font-mono pb-8">Usuarios</h1>
@@ -27,8 +50,8 @@
                 <table class="w-full text-white border-separate border-spacing-y-3">
                     <thead>
                         <tr class="text-gray-500 text-sm uppercase tracking-wider">
-                            <th class="px-4 py-2 text-left">Usuario</th>
-                            <th class="px-4 py-2">Rol Principal</th>
+                            <th class="px-4 py-2 text-left">Nombre</th>
+                            <th class="px-4 py-2">Rol(es)</th>
                             <th class="px-4 py-2 hidden md:table-cell">Correo</th>
                             <th class="px-4 py-2 text-center">Acciones</th>
                         </tr>
@@ -38,17 +61,20 @@
                             <tr class="bg-[#1b1b18] hover:bg-[#252522] transition-colors rounded-lg">
                                 <td class="px-4 py-4 rounded-l-lg font-medium">{{ $user->name }}</td>
                                 <td class="px-4 py-4 text-center">
-                                    <span
-                                        class="px-3 py-1 rounded-full text-[10px] font-bold border border-indigo-500/20 bg-indigo-500/10 text-indigo-400 uppercase tracking-widest">
-                                        {{ $user->roles->first()->name ?? 'Sin Rol' }}
-                                    </span>
+                                    <div class="flex flex-wrap justify-center gap-1">
+                                        @foreach ($user->roles as $role)
+                                            <span
+                                                class="px-3 py-1 rounded-full text-[10px] font-bold border border-indigo-500/20 bg-indigo-500/10 text-indigo-400 uppercase tracking-widest">
+                                                {{ $role->name }}
+                                            </span>
+                                        @endforeach
+                                    </div>
                                 </td>
                                 <td class="px-4 py-4 text-center hidden md:table-cell text-gray-400 font-mono">
                                     {{ $user->email }}
                                 </td>
                                 <td class="px-4 py-4 rounded-r-lg">
                                     <div class="flex items-center justify-center gap-4">
-                                        {{-- Ver Info --}}
                                         <button
                                             @click="selectedUser = @js($user); showViewModalUser = true"
                                             class="text-indigo-400 hover:text-indigo-300 transition-colors">
@@ -61,14 +87,13 @@
                                             </svg>
                                         </button>
 
-                                        {{-- Editar --}}
                                         <button
                                             @click="selectedUser = { 
                                             id: {{ $user->id }}, 
                                             name: @js($user->name), 
                                             email: @js($user->email),
-                                            role_id: @js($user->roles->first()->id ?? '')
-                                        }; showEditModalUser = true"
+                                            role_id: '{{ $user->roles->first()->id ?? '' }}'
+                                        }; changePassword = false; showEditModalUser = true"
                                             class="text-indigo-400 hover:text-indigo-300 transition-colors">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none"
                                                 viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -77,7 +102,6 @@
                                             </svg>
                                         </button>
 
-                                        {{-- Eliminar --}}
                                         <form method="POST" action="{{ route('users.destroy', $user->id) }}"
                                             onsubmit="return confirm('¿Eliminar usuario?')">
                                             @csrf @method('DELETE')
@@ -95,7 +119,8 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" class="py-10 text-center text-gray-500">No hay usuarios registrados</td>
+                                <td colspan="4" class="py-10 text-center text-gray-500 italic">No hay usuarios
+                                    registrados</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -114,50 +139,58 @@
                 <div class="space-y-1">
                     <label class="block text-[10px] uppercase tracking-widest text-indigo-400 font-mono">Nombre
                         Completo</label>
-                    <input type="text" name="name" required
-                        class="w-full border border-gray-700 bg-[#1b1b18] text-white rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500">
+                    <div class="bg-[#1b1b18] border border-gray-700 rounded-lg">
+                        <input type="text" name="name" required
+                            class="w-full bg-transparent text-white px-3 py-2 outline-none focus:ring-1 focus:ring-indigo-500 rounded-lg">
+                    </div>
                 </div>
 
                 <div class="space-y-1">
                     <label class="block text-[10px] uppercase tracking-widest text-indigo-400 font-mono">Correo
                         Electrónico</label>
-                    <input type="email" name="email" required
-                        class="w-full border border-gray-700 bg-[#1b1b18] text-white rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500">
+                    <div class="bg-[#1b1b18] border border-gray-700 rounded-lg">
+                        <input type="email" name="email" required
+                            class="w-full bg-transparent text-white px-3 py-2 outline-none focus:ring-1 focus:ring-indigo-500 rounded-lg">
+                    </div>
                 </div>
 
                 <div class="space-y-1">
-                    <label class="block text-[10px] uppercase tracking-widest text-indigo-400 font-mono">Rol
-                        Asignado</label>
-                    <select name="role_id" required
-                        class="w-full border border-gray-700 bg-[#1b1b18] text-white rounded-lg px-3 py-2">
-                        <option value="" disabled selected>Selecciona un rol</option>
-                        @foreach ($roles as $role)
-                            <option value="{{ $role->id }}">{{ $role->name }}</option>
-                        @endforeach
-                    </select>
+                    <label class="block text-[10px] uppercase tracking-widest text-indigo-400 font-mono">Rol de
+                        Sistema</label>
+                    <div class="bg-[#1b1b18] border border-gray-700 rounded-lg">
+                        <select name="role_id" required
+                            class="w-full bg-transparent text-white px-3 py-2 outline-none rounded-lg">
+                            <option value="" disabled selected class="bg-[#161615]">Selecciona un rol</option>
+                            @foreach ($roles as $role)
+                                <option value="{{ $role->id }}" class="bg-[#161615]">{{ $role->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="space-y-1">
+                <div class="space-y-1">
+                    <div class="flex justify-between items-center">
                         <label
                             class="block text-[10px] uppercase tracking-widest text-indigo-400 font-mono">Contraseña</label>
-                        <div class="relative">
-                            <input :type="showPassword ? 'text' : 'password'" name="password" required
-                                class="w-full border border-gray-700 bg-[#1b1b18] text-white rounded-lg px-3 py-2 pr-10">
+                        <button type="button" @click="fillPassword('create')"
+                            class="text-[9px] text-indigo-400 hover:underline font-bold uppercase">Generar Clave</button>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="relative bg-[#1b1b18] border border-gray-700 rounded-lg">
+                            <input x-ref="passCreate" :type="showPassword ? 'text' : 'password'" name="password" required
+                                class="w-full bg-transparent text-white px-3 py-2 pr-10 outline-none rounded-lg">
                             <button type="button" @click="showPassword = !showPassword"
-                                class="absolute inset-y-0 right-0 px-3 text-gray-500 hover:text-white">
+                                class="absolute inset-y-0 right-0 px-3 text-gray-500">
                                 <span x-text="showPassword ? '🙈' : '👁️'"></span>
                             </button>
                         </div>
-                    </div>
-                    <div class="space-y-1">
-                        <label
-                            class="block text-[10px] uppercase tracking-widest text-indigo-400 font-mono">Confirmar</label>
-                        <div class="relative">
-                            <input :type="showPasswordConfirm ? 'text' : 'password'" name="password_confirmation" required
-                                class="w-full border border-gray-700 bg-[#1b1b18] text-white rounded-lg px-3 py-2 pr-10">
+                        <div class="relative bg-[#1b1b18] border border-gray-700 rounded-lg">
+                            <input x-ref="passConfirmCreate" :type="showPasswordConfirm ? 'text' : 'password'"
+                                name="password_confirmation" required
+                                class="w-full bg-transparent text-white px-3 py-2 pr-10 outline-none rounded-lg"
+                                placeholder="Confirmar">
                             <button type="button" @click="showPasswordConfirm = !showPasswordConfirm"
-                                class="absolute inset-y-0 right-0 px-3 text-gray-500 hover:text-white">
+                                class="absolute inset-y-0 right-0 px-3 text-gray-500">
                                 <span x-text="showPasswordConfirm ? '🙈' : '👁️'"></span>
                             </button>
                         </div>
@@ -166,8 +199,8 @@
 
                 <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-800">
                     <button type="button" @click="showCreateModalUser = false"
-                        class="text-gray-500 text-xs font-mono uppercase tracking-widest px-4 py-2">Cancelar</button>
-                    <button type="submit" :disabled="loading" :class="loading ? 'opacity-50 cursor-not-allowed' : ''"
+                        class="text-gray-500 text-xs font-mono uppercase px-4 py-2 hover:text-white">Cancelar</button>
+                    <button type="submit" :disabled="loading"
                         class="bg-indigo-600 text-white font-bold px-6 py-2 rounded-lg hover:bg-indigo-700 transition flex items-center gap-2">
                         <span x-show="!loading">Guardar Usuario</span>
                         <span x-show="loading">Procesando...</span>
@@ -185,29 +218,60 @@
                 @csrf @method('PUT')
                 <div class="space-y-1">
                     <label class="block text-[10px] uppercase tracking-widest text-indigo-400 font-mono">Nombre</label>
-                    <input type="text" name="name" x-model="selectedUser.name" required
-                        class="w-full border border-gray-700 bg-[#1b1b18] text-white rounded-lg px-3 py-2">
+                    <div class="bg-[#1b1b18] border border-gray-700 rounded-lg">
+                        <input type="text" name="name" x-model="selectedUser.name" required
+                            class="w-full bg-transparent text-white px-3 py-2 outline-none rounded-lg">
+                    </div>
                 </div>
+
                 <div class="space-y-1">
                     <label class="block text-[10px] uppercase tracking-widest text-indigo-400 font-mono">Correo</label>
-                    <input type="email" name="email" x-model="selectedUser.email" required
-                        class="w-full border border-gray-700 bg-[#1b1b18] text-white rounded-lg px-3 py-2">
+                    <div class="bg-[#1b1b18] border border-gray-700 rounded-lg">
+                        <input type="email" name="email" x-model="selectedUser.email" required
+                            class="w-full bg-transparent text-white px-3 py-2 outline-none rounded-lg">
+                    </div>
                 </div>
+
                 <div class="space-y-1">
                     <label class="block text-[10px] uppercase tracking-widest text-indigo-400 font-mono">Rol</label>
-                    <select name="role_id" x-model="selectedUser.role_id" required
-                        class="w-full border border-gray-700 bg-[#1b1b18] text-white rounded-lg px-3 py-2">
-                        @foreach ($roles as $role)
-                            <option value="{{ $role->id }}">{{ $role->name }}</option>
-                        @endforeach
-                    </select>
+                    <div class="bg-[#1b1b18] border border-gray-700 rounded-lg">
+                        <select name="role_id" x-model="selectedUser.role_id" required
+                            class="w-full bg-transparent text-white px-3 py-2 outline-none rounded-lg">
+                            @foreach ($roles as $role)
+                                <option value="{{ $role->id }}" class="bg-[#161615]">{{ $role->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
-                <p class="text-[10px] text-gray-500 italic">* Para cambiar la contraseña use la opción de resetear desde el
-                    listado.</p>
+
+                {{-- Sección Password Dinámica --}}
+                <div class="pt-2 border-t border-gray-800/50">
+                    <div class="flex items-center gap-2 mb-3">
+                        <input type="checkbox" id="changePass" x-model="changePassword"
+                            class="rounded border-gray-700 bg-[#1b1b18] text-indigo-600 focus:ring-0">
+                        <label for="changePass"
+                            class="text-[10px] uppercase tracking-widest text-gray-400 font-mono cursor-pointer">¿Actualizar
+                            Contraseña?</label>
+                    </div>
+
+                    <div x-show="changePassword" x-transition class="space-y-1">
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-[10px] uppercase tracking-widest text-indigo-400 font-mono">Nueva
+                                Clave</label>
+                            <button type="button" @click="fillPassword('edit')"
+                                class="text-[9px] text-indigo-400 hover:underline font-bold uppercase">Generar</button>
+                        </div>
+                        <div class="bg-[#1b1b18] border border-gray-700 rounded-lg">
+                            <input x-ref="passEdit" type="text" name="password" placeholder="Mínimo 8 caracteres"
+                                class="w-full bg-transparent text-white px-3 py-2 outline-none rounded-lg">
+                        </div>
+                    </div>
+                </div>
+
                 <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-800">
                     <button type="button" @click="showEditModalUser = false"
-                        class="text-gray-500 text-xs font-mono uppercase tracking-widest px-4 py-2">Cancelar</button>
-                    <button type="submit" :disabled="loading" :class="loading ? 'opacity-50 cursor-not-allowed' : ''"
+                        class="text-gray-500 text-xs font-mono uppercase px-4 py-2 hover:text-white">Cancelar</button>
+                    <button type="submit" :disabled="loading"
                         class="bg-indigo-600 text-white font-bold px-6 py-2 rounded-lg hover:bg-indigo-700">
                         <span x-show="!loading">Actualizar</span>
                         <span x-show="loading">Procesando...</span>
@@ -227,24 +291,27 @@
                         x-text="selectedUser.name"></div>
                 </div>
                 <div class="space-y-1">
-                    <label class="block text-[10px] uppercase tracking-widest text-indigo-400 font-mono">Email</label>
-                    <div class="w-full border border-gray-700 bg-[#1b1b18] rounded-lg px-3 py-2 text-gray-300 font-mono"
+                    <label class="block text-[10px] uppercase tracking-widest text-indigo-400 font-mono">Correo
+                        Electrónico</label>
+                    <div class="w-full border border-gray-700 bg-[#1b1b18] rounded-lg px-3 py-2 text-white font-mono"
                         x-text="selectedUser.email"></div>
                 </div>
                 <div class="space-y-1">
-                    <label class="block text-[10px] uppercase tracking-widest text-indigo-400 font-mono">Roles
-                        Asignados</label>
-                    <div class="flex flex-wrap gap-2 pt-1">
+                    <label class="block text-[10px] uppercase tracking-widest text-indigo-400 font-mono">Roles del
+                        Sistema</label>
+                    <div
+                        class="w-full border border-gray-700 bg-[#1b1b18] rounded-lg px-3 py-2 flex flex-wrap gap-2 items-center min-h-[45px]">
                         <template x-for="role in selectedUser.roles" :key="role.id">
                             <span
-                                class="px-3 py-1 rounded-full text-[10px] font-bold border border-indigo-500/20 bg-indigo-500/10 text-indigo-400 uppercase tracking-widest"
+                                class="px-3 py-1 rounded-full text-[10px] font-bold border border-green-500/20 bg-green-500/10 text-green-400 uppercase tracking-widest"
                                 x-text="role.name"></span>
                         </template>
                     </div>
                 </div>
                 <div class="flex justify-end pt-6 border-t border-gray-800">
                     <button type="button" @click="showViewModalUser = false"
-                        class="bg-gray-800 hover:bg-gray-700 text-white text-[10px] uppercase tracking-widest font-mono px-8 py-2.5 rounded-lg border border-gray-700 transition-all">Cerrar</button>
+                        class="bg-gray-800 hover:bg-gray-700 text-gray-300 text-[10px] uppercase tracking-widest font-mono px-8 py-2.5 rounded-lg border border-gray-700 transition-all">Cerrar
+                        Panel</button>
                 </div>
             </div>
         </x-modal-base>

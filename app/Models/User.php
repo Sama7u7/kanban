@@ -2,48 +2,65 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
     /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
+     * Se elimina 'role' de aquí, ya que ahora es una relación 
+     * Many-to-Many en la tabla pivote role_user.
      */
     protected $fillable = [
         'name',
         'email',
         'password',
-        'role',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /* RELACIONES Y ROLES                                */
+    /* -------------------------------------------------------------------------- */
+
+    /**
+     * Relación con los roles del usuario.
+     */
+    public function roles(): BelongsToMany
+    {
+        return $this->belongsToMany(Role::class);
+    }
+
+    /**
+     * Verifica si el usuario tiene un rol específico por su nombre (slug).
+     * Ejemplo: $user->hasRole('admin');
+     */
+    public function hasRole(string $role): bool
+    {
+        return $this->roles->contains('name', $role);
+    }
+
+    /**
+     * Verifica si el usuario tiene un permiso específico a través de cualquiera de sus roles.
+     * Ejemplo: $user->hasPermission('edit_roles');
+     */
+    public function hasPermission(string $permission): bool
+    {
+        return $this->roles->map->permissions->flatten()->contains('name', $permission);
     }
 }

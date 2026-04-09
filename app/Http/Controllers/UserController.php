@@ -4,47 +4,41 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Models\Role;
 use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
-    // Mostrar el formulario para crear un usuario
-    public function create()
+    // Función para listar los usuarios
+    public function index()
     {
-        //Manejado con Alpine
+        // Cargamos la relación roles para evitar el problema de celdas vacías
+        $users = User::with('roles')->paginate(15);
+        $roles = Role::all(); 
+        
+        return view('admin.users.index', compact('users', 'roles'));
     }
 
     // Manejar el envío del formulario y crear el usuario
     public function store(Request $request)
     {
-        // Validar los datos del formulario
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:6|confirmed',
+            'role_id' => 'required|exists:roles,id', // Validamos que el ID del rol exista en la DB
         ]);
 
-        // Crear un nuevo usuario
-        User::create([
+        $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),  // Hashear la contraseña
+            'password' => Hash::make($validated['password']),
         ]);
 
-        // Redirigir a la página de usuarios con un mensaje de éxito
-        return redirect()->route('users.create')->with('success', 'Usuario creado exitosamente.');
-    }
-    // Función para listar los usuarios
-    public function index()
-    {
-        $users = User::paginate(15);
-        return view('usersDashboard', compact('users'));
-    }
+        // VINCULACIÓN: Insertar en la tabla role_user
+        $user->roles()->attach($request->role_id);
 
-    // Muestra el formulario para editar un usuario
-    public function edit($id)
-    {
-        //Manejado con Alpine
+        return redirect()->route('users.index')->with('success', 'Usuario creado exitosamente.');
     }
 
     // Actualiza los datos de un usuario
@@ -53,25 +47,26 @@ class UserController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $id,
-            'role' => 'required|in:it,padre_familia,profesor,seccion_prim,seccion_sec,seccion_prep,seccion_pres',
+            'role_id' => 'required|exists:roles,id', // Validamos contra la tabla roles, no contra el string viejo
         ]);
 
         $usuario = User::findOrFail($id);
 
-        // Actualizar campos básicos
-        $usuario->name = $request->name;
-        $usuario->email = $request->email;
-        $usuario->role = $request->role;
+        // Actualizar campos básicos del usuario
+        $usuario->update([
+            'name' => $request->name,
+            'email' => $request->email,
+        ]);
 
-        // Si se envía una contraseña no vacía, actualízala
+        // SINCRONIZACIÓN: Actualizar el rol en la tabla intermedia
+        $usuario->roles()->sync([$request->role_id]);
+
+        // Si se envió una contraseña desde el modal (opcional)
         if ($request->filled('password')) {
-            $request->validate([
-                'password' => 'required|string|min:8|confirmed',
+            $usuario->update([
+                'password' => Hash::make($request->password)
             ]);
-            $usuario->password = bcrypt($request->input('password'));
         }
-
-        $usuario->save();
 
         return redirect()->route('users.index')->with('success', 'Usuario actualizado con éxito.');
     }
@@ -80,10 +75,13 @@ class UserController extends Controller
     public function destroy($id)
     {
         $user = User::findOrFail($id);
+        // Desvinculamos roles antes de borrar para evitar basura en role_user
+        $user->roles()->detach();
         $user->delete();
 
-        return redirect()->route('users.index')->with('success', 'Tarea eliminada con éxito.');
+        return redirect()->route('users.index')->with('success', 'Usuario eliminado con éxito.');
     }
+
     public function resetPassword(Request $request, User $user)
     {
         $request->validate([
