@@ -137,9 +137,9 @@
                     @method('PUT')
 
                     <div class="mb-4">
-                        <label class="text-gray-400 text-sm block mb-2">Nombre</label>
-                        <input type="text" name="display_name" x-model="roleToEdit.display_name" required
-                            class="w-full bg-[#161615] border-gray-700 border rounded-lg p-2 text-white focus:outline-none focus:border-indigo-500">
+                        <label class="text-gray-400 text-sm block mb-2">Nombre del Rol</label>
+                        <input type="text" name="display_name"x-model="roleToEdit.display_name" required
+                            class="w-full bg-[#161615] border-gray-700 border rounded-lg p-2 text-white outline-none focus:ring-1 focus:ring-indigo-500">
                     </div>
 
                     <div class="mb-6">

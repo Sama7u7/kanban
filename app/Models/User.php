@@ -63,4 +63,19 @@ class User extends Authenticatable
     {
         return $this->roles->map->permissions->flatten()->contains('name', $permission);
     }
+
+
+public function scopeResponsables($query)
+{
+    return $query->whereHas('roles.permissions', function($q) {
+        $q->where('slug', 'atender_tareas');
+    });
+}
+
+public function scopeSolicitantes($query)
+{
+    return $query->whereHas('roles.permissions', function($q) {
+        $q->where('slug', 'solicitar_tareas');
+    });
+}
 }

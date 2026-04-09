@@ -21,6 +21,8 @@ class DatabaseSeeder extends Seeder
             ['name' => 'edit_tasks',   'description' => 'Editar tareas existentes'],
             ['name' => 'delete_tasks', 'description' => 'Eliminar tareas'],
             ['name' => 'view_all_tasks', 'description' => 'Ver tareas de todos los usuarios'],
+            ['name' => 'atender_tareas', 'description' => 'Atender tareas'],
+            ['name' => 'solicitar_tareas', 'description' => 'Solicitar tareas'],
         ];
 
         foreach ($permissions as $p) {

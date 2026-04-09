@@ -5,22 +5,38 @@ use App\Http\Controllers\TaskController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\DashboardController;
 
 // --- RUTAS PÚBLICAS ---
 Route::get('/', function () {
-    return view('welcome');
-});
+    // Si el usuario ya inició sesión, lo redirigimos al dashboard
+    if (auth()->check()) {
+        return redirect()->route('dashboard');
+    }
 
-Route::post('/login', [AuthController::class, 'authenticate'])->name('login');
+    // Si es un invitado, le mostramos el formulario de login
+    return view('welcome');
+})->name('login'); // <-- CAMBIO 1: El middleware 'auth' buscará exactamente este nombre para redirigir a los no logueados.
+
+Route::post('/login', [AuthController::class, 'authenticate'])->name('login.post'); // <-- CAMBIO 2: Le cambiamos el nombre a la ruta POST para que no haya conflictos.
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 
 // --- RUTAS PROTEGIDAS (Requieren Login) ---
 Route::middleware(['auth'])->group(function () {
 
-    // Gestión de Tareas (Accesible para todos los logueados, el filtrado se hace en el Controller)
-    Route::resource('tasks', TaskController::class);
+    // Ruta Principal del Dashboard
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // ==========================================
+    // GESTIÓN DE TAREAS 
+    // ==========================================
+    // 1. Ruta para que el Kanban guarde el estatus vía AJAX (Debe ir ANTES del resource)
     Route::patch('tasks/{task}/status', [TaskController::class, 'updateStatus'])->name('tasks.updateStatus');
+    
+    // 2. Rutas estándar (index, store, update, destroy)
+    Route::resource('tasks', TaskController::class);
+
 
     // ==========================================
     // GESTIÓN DE USUARIOS (Solo con permiso)

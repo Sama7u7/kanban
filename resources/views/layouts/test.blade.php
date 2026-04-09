@@ -11,8 +11,10 @@
 
 <body class="bg-background h-screen overflow-hidden flex flex-col lg:flex-row" x-data="{
     open: false,
-    sidebarExpanded: true,
-    /* <-- NUEVA VARIABLE: Controla el ancho en PC */
+
+    /* 1. MEMORIA DEL NAVEGADOR: Lee el localStorage. Si dice 'false', arranca cerrada. Si no, abierta. */
+    sidebarExpanded: localStorage.getItem('sidebarExpanded') === 'false' ? false : true,
+
     showPasswordConfirm: false,
     showPassword: false,
     showCreateModal: false,
@@ -25,10 +27,13 @@
     selectedUser: {},
     newPassword: '',
 }"
-    x-init="$nextTick(() => {
+    x-init="/* 2. EL VIGÍA: Si le das clic al botón de expandir/contraer, guarda la decisión en la memoria */
+    $watch('sidebarExpanded', value => localStorage.setItem('sidebarExpanded', value));
+    
+    $nextTick(() => {
         showEditModalUser = false;
         showViewModalUser = false;
-    })">
+    });">
     @include ('components.toasts')
 
     {{-- HEADER MÓVIL (No se toca) --}}
@@ -47,7 +52,7 @@
             open ? 'translate-x-0' : '-translate-x-full',
             sidebarExpanded ? 'lg:w-64' : 'lg:w-20' /* <-- AJUSTA EL ANCHO DINÁMICAMENTE */
         ]"
-        class="fixed inset-y-0 left-0 z-50 w-64 bg-gray-800 shrink-0 flex flex-col transition-all duration-300 transform lg:translate-x-0 lg:static overflow-hidden">
+        class="fixed inset-y-0 left-0 z-50 bg-gray-800 shrink-0 flex flex-col transition-all duration-300 transform lg:translate-x-0 lg:static overflow-hidden">
         <div class="lg:hidden flex justify-end p-4">
             <button @click="open = false" class="text-gray-400">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

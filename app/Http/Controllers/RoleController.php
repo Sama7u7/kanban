@@ -22,7 +22,7 @@ class RoleController extends Controller
 
         // Asegúrate de que el nombre de la vista coincida con tu archivo
         // Ej: resources/views/roles/index.blade.php -> 'roles.index'
-        return view('roles.index', compact('roles', 'permissions'));
+        return view('admin.roles.index', compact('roles', 'permissions'));
     }
 
     /**
@@ -43,5 +43,26 @@ class RoleController extends Controller
         $role->permissions()->sync($request->permissions);
 
         return back()->with('success', 'Rol creado con éxito');
+    }
+    public function update(Request $request, $id)
+    {
+    // Validamos el campo que viene del HTML (display_name)
+    $request->validate([
+        'display_name' => 'required|string|max:255',
+        'permissions' => 'array'
+    ]);
+
+    $role = \App\Models\Role::findOrFail($id);
+    
+    $role->update([
+        'display_name' => $request->display_name,
+        // Genera el name técnico automáticamente (ej: 'Profesor de Primaria' -> 'profesor-de-primaria')
+        'name' => \Illuminate\Support\Str::slug($request->display_name), 
+    ]);
+
+    // Sincroniza los permisos
+    $role->permissions()->sync($request->permissions ?? []);
+
+    return redirect()->route('roles.index')->with('success', 'Rol actualizado con éxito');
     }
 }

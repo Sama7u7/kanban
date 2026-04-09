@@ -12,7 +12,6 @@ class UserController extends Controller
     // Función para listar los usuarios
     public function index()
     {
-        // Cargamos la relación roles para evitar el problema de celdas vacías
         $users = User::with('roles')->paginate(15);
         $roles = Role::all(); 
         
@@ -22,21 +21,23 @@ class UserController extends Controller
     // Manejar el envío del formulario y crear el usuario
     public function store(Request $request)
     {
+        // Actualizado para validar un array de roles
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
+            'name'     => 'required|string|max:255',
+            'email'    => 'required|email|unique:users,email',
             'password' => 'required|string|min:6|confirmed',
-            'role_id' => 'required|exists:roles,id', // Validamos que el ID del rol exista en la DB
+            'roles'    => 'required|array', // Validamos que sea un array
+            'roles.*'  => 'exists:roles,id', // Validamos que cada ID exista
         ]);
 
         $user = User::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
+            'name'     => $validated['name'],
+            'email'    => $validated['email'],
             'password' => Hash::make($validated['password']),
         ]);
 
-        // VINCULACIÓN: Insertar en la tabla role_user
-        $user->roles()->attach($request->role_id);
+        // Usamos sync para asignar los múltiples roles desde el array
+        $user->roles()->sync($request->roles);
 
         return redirect()->route('users.index')->with('success', 'Usuario creado exitosamente.');
     }
@@ -44,25 +45,28 @@ class UserController extends Controller
     // Actualiza los datos de un usuario
     public function update(Request $request, $id)
     {
+        // Actualizado para validar un array de roles
         $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $id,
-            'role_id' => 'required|exists:roles,id', // Validamos contra la tabla roles, no contra el string viejo
+            'name'    => 'required|string|max:255',
+            'email'   => 'required|email|unique:users,email,' . $id,
+            'roles'   => 'required|array',
+            'roles.*' => 'exists:roles,id',
         ]);
 
         $usuario = User::findOrFail($id);
 
-        // Actualizar campos básicos del usuario
         $usuario->update([
-            'name' => $request->name,
+            'name'  => $request->name,
             'email' => $request->email,
         ]);
 
-        // SINCRONIZACIÓN: Actualizar el rol en la tabla intermedia
-        $usuario->roles()->sync([$request->role_id]);
+        // Sincronización múltiple: Borra los anteriores y pone los nuevos seleccionados
+        $usuario->roles()->sync($request->roles);
 
-        // Si se envió una contraseña desde el modal (opcional)
         if ($request->filled('password')) {
+            $request->validate([
+                'password' => 'required|string|min:6',
+            ]);
             $usuario->update([
                 'password' => Hash::make($request->password)
             ]);
@@ -75,7 +79,7 @@ class UserController extends Controller
     public function destroy($id)
     {
         $user = User::findOrFail($id);
-        // Desvinculamos roles antes de borrar para evitar basura en role_user
+        // Desvinculamos todos sus roles
         $user->roles()->detach();
         $user->delete();
 
