@@ -339,3 +339,4 @@ FILE: /home/cloudboy/repos/kanban/composer.json
 *   **`setup`**: Este script es perfecto para una configuración inicial. Primero instala las dependencias de PHP, luego asegura que exista un archivo `.env` (copiando el `.env.example` si no está), genera la clave de la aplicación, ejecuta las migraciones de base de datos, instala las dependencias de Node.js y finalmente compila los assets.
 *   **`dev`**: Este es un script excelente para el desarrollo, ya que utiliza `concurrently` para ejecutar simultáneamente el servidor de Laravel, el listener de la cola (si lo usas) y el servidor de desarrollo de Vite, mostrando la salida de cada uno con colores distintos.
 *   Los demás scripts (`test`, `post-autoload-dump`, `post-update-cmd`, `post-root-package-install`) son ganchos estándar de Composer y Laravel que también son completamente genéricos.
+---
