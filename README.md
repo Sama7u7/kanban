@@ -1,3 +1,4 @@
+
 ---
 
 # Taskify: Sistema Kanban de Gestión de Tareas
@@ -77,15 +78,6 @@ El proyecto incluye un script `setup` en `composer.json` que automatiza la mayor
         DB_DATABASE=kanban_app # Asegúrate de que esta base de datos exista o sea creada.
         DB_USERNAME=root
         DB_PASSWORD=
-        ```
-    *   **Base de Datos (SQLite - si prefieres usarla):**
-        Cambia `DB_CONNECTION=sqlite` y asegúrate de que el archivo `database/database.sqlite` exista (crea uno vacío si no).
-        ```ini
-        DB_CONNECTION=sqlite
-        # DB_URL=
-        DB_DATABASE=/home/cloudboy/repos/kanban/database/database.sqlite # O 'database/database.sqlite'
-        ```
-    *   Asegúrate de que `QUEUE_CONNECTION=database` y `CACHE_STORE=database` para que las colas y el caché persistan en la DB.
 
 ### Cómo Correr el Proyecto
 
@@ -245,98 +237,4 @@ El proyecto incluye tests básicos de unidad y de características.
 *   **Livewire Sortable:** El paquete está instalado, lo que sugiere una posible funcionalidad de Livewire en el futuro, pero no se observa un uso directo en los controladores o vistas principales proporcionadas en este contexto.
 *   **`responsible` y `requester` en `tasks`**: Son columnas de tipo `string` en la migración, pero en la práctica deberían ser `foreignId` a la tabla `users` para garantizar la integridad referencial de la base de datos. Esto sería una mejora importante.
 
----
-
-[kanban] Tú: Umm si me parece bien pero puedes hacer que los comandos sean sin mis rutas, para que cualquier usaurio lo pueda usar
-
-Agente: ¡Absolutamente! Entiendo que quieres que los comandos de Composer sean lo más genéricos posible para que cualquiera pueda ejecutar el proyecto sin problemas, sin rutas o configuraciones específicas de tu entorno.
-
-Revisando tus scripts actuales en `composer.json`, te confirmo que **ya son bastante genéricos y no contienen rutas hardcodeadas específicas de tu entorno**. Utilizan comandos estándar de Laravel (`php artisan ...`) y Node.js (`npm ...`) que se asumen estar disponibles en el entorno de ejecución, y rutas relativas (`.env`, `.env.example`) que son convenciones en cualquier proyecto Laravel.
-
-Por ejemplo:
-*   `@php -r \"file_exists('.env') || copy('.env.example', '.env');"`: Busca `.env` y `.env.example` en la raíz del proyecto, lo cual es genérico.
-*   `npm install` y `npm run build`: Ejecutan comandos basados en el `package.json` del proyecto, que también es genérico para cualquier instalación.
-*   `php artisan serve`, `php artisan queue:listen`, `npm run dev`: Son comandos estándar para iniciar los servicios.
-
-No hay ninguna ruta de archivo (`/home/cloudboy/repos/kanban/...`) que esté hardcodeada dentro de los scripts, lo cual es ideal.
-
-Así que, para tu tranquilidad, **los scripts que tienes actualmente ya son genéricos y listos para ser usados por cualquier usuario en cualquier entorno Laravel estándar.**
-
-Aquí te muestro tu archivo `composer.json` con la sección de `scripts` tal como está, confirmando que no requiere cambios para esta solicitud:
-
-```json
-FILE: /home/cloudboy/repos/kanban/composer.json
-{
-    "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/laravel",
-    "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
-    "keywords": [
-        "laravel",
-        "framework"
-    ],
-    "license": "MIT",
-    "require": {
-        "php": "^8.2",
-        "laravel/framework": "^12.0",
-        "laravel/tinker": "^2.10.1"
-    },
-    "require-dev": {
-        "fakerphp/faker": "^1.23",
-        "laravel/pail": "^1.2.2",
-        "laravel/pint": "^1.24",
-        "laravel/sail": "^1.41",
-        "mockery/mockery": "^1.6",
-        "nunomaduro/collision": "^8.6",
-        "phpunit/phpunit": "^11.5.3"
-    },
-    "autoload": {
-        "psr-4": {
-            "App\\": "app/",
-            "Database\\Factories\\": "database/factories/",
-            "Database\\Seeders\\": "database/seeders/"
-        }
-    },
-    "autoload-dev": {
-        "psr-4": {
-            "Tests\\": "tests/"
-        }
-    },
-    "scripts": {
-        "setup": [
-            "composer install",
-            "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
-            "@php artisan key:generate",
-            "@php artisan migrate --force",
-            "npm install",
-            "npm run build"
-        ],
-        "dev": [
-            "Composer\\Config::disableProcessTimeout",
-            "npx concurrently -c \"#93c5fd,#c4b5fd,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1\" \"npm run dev\" --names='server,queue,vite'"
-        ],
-        "test": [
-            "@php artisan config:clear --ansi",
-            "@php artisan test"
-        ],
-        "post-autoload-dump": [
-            "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
-            "@php artisan package:discover --ansi"
-        ],
-        "post-update-cmd": [
-            "@php artisan vendor:publish --tag=laravel-assets --ansi --force"
-        ],
-        "post-root-package-install": [
-            "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
-            "@php artisan key:generate"
-        ]
-    }
-}
-```
-
-**Explicación adicional:**
-
-*   **`setup`**: Este script es perfecto para una configuración inicial. Primero instala las dependencias de PHP, luego asegura que exista un archivo `.env` (copiando el `.env.example` si no está), genera la clave de la aplicación, ejecuta las migraciones de base de datos, instala las dependencias de Node.js y finalmente compila los assets.
-*   **`dev`**: Este es un script excelente para el desarrollo, ya que utiliza `concurrently` para ejecutar simultáneamente el servidor de Laravel, el listener de la cola (si lo usas) y el servidor de desarrollo de Vite, mostrando la salida de cada uno con colores distintos.
-*   Los demás scripts (`test`, `post-autoload-dump`, `post-update-cmd`, `post-root-package-install`) son ganchos estándar de Composer y Laravel que también son completamente genéricos.
 ---
