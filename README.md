@@ -1,59 +1,307 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+ Este proyecto se trata de una **aplicación web de gestión de tareas tipo Kanban** llamada "Taskify", construida con el framework **Laravel** (PHP), que utiliza **Alpine.js** para interactividad frontend y **Tailwind CSS** para los estilos. Su objetivo principal es organizar y seguir el progreso de tareas con un sistema de usuarios y permisos robusto.
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Aquí están las funciones principales que tiene el proyecto, desglosadas por áreas:
 
-## About Laravel
+### 1. Gestión de Usuarios y Autenticación
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+*   **Inicio y Cierre de Sesión:** Permite a los usuarios registrarse y salir de la aplicación de forma segura.
+*   **Gestión CRUD de Usuarios (Create, Read, Update):** Un administrador puede:
+    *   Listar todos los usuarios del sistema con paginación.
+    *   Crear nuevos usuarios, asignándoles uno o varios roles.
+    *   Actualizar la información de usuarios existentes (nombre, email), incluyendo sus roles.
+    *   Generar contraseñas seguras automáticamente para nuevos usuarios o al cambiar una existente.
+*   **Sistema de Roles y Permisos (RBAC - Role-Based Access Control):**
+    *   Define **Roles** (ej. "Administrador", "Profesor") y **Permisos** (ej. "gestionar_usuarios", "crear_tareas").
+    *   **Asigna múltiples permisos a cada rol.**
+    *   **Asigna múltiples roles a cada usuario.**
+    *   La lógica de la aplicación verifica si un usuario tiene un permiso específico para acceder a ciertas funcionalidades (`$user->hasPermission('nombre_del_permiso')`).
+    *   Existen permisos predefinidos como: `manage_roles`, `manage_users`, `create_tasks`, `edit_tasks`, `delete_tasks`, `view_all_tasks`, `atender_tareas`, `solicitar_tareas`.
+*   **Middleware de Roles:** Incluye un middleware `CheckRole` que puede proteger rutas basándose en el rol del usuario, aunque la implementación actual en `web.php` usa `hasPermission`.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### 2. Gestión de Tareas (Kanban)
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+*   **Listado de Tareas (Kanban y Tabla):**
+    *   Muestra las tareas en un formato de tabla o un tablero Kanban visual, con columnas para diferentes estados (`por_hacer`, `haciendo`, `hecho`, `cancelado`).
+    *   **Filtrado de Tareas:** Permite buscar tareas por título o descripción, y filtrar por estado o por usuario responsable.
+    *   **Filtrado por Seguridad:** Los usuarios regulares solo ven las tareas en las que son responsables o solicitantes, mientras que los administradores (`view_all_tasks` permission) pueden ver todas las tareas.
+*   **Creación de Tareas:** Permite la creación de nuevas tareas.
+*   **Actualización de Tareas:**
+    *   Actualiza el estado de las tareas, especialmente útil para el arrastrar y soltar en el tablero Kanban (`tasks.updateStatus` vía PATCH).
+    *   Permite editar otros detalles de la tarea.
+*   **Asignación de Responsables y Solicitantes:** Cada tarea tiene un usuario responsable y un usuario solicitante.
+*   **Fechas de Vencimiento:** Las tareas pueden tener una fecha límite.
+*   **Roles específicos para tareas:** Se definen usuarios que pueden "atender_tareas" (responsables) y usuarios que pueden "solicitar_tareas".
 
-## Learning Laravel
+### 3. Dashboard y Reportes
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+*   **Panel de Control Principal:** Proporciona un resumen visual del estado de las tareas.
+*   **KPIs (Indicadores Clave de Rendimiento):**
+    *   Muestra el número total de tareas, tareas completadas y tareas vencidas.
+    *   Distingue entre una vista global para administradores (todas las tareas) y una vista personal para usuarios regulares (solo sus tareas o las que solicitaron).
+*   **Gráfico de Estados de Tareas:** Muestra la distribución de tareas por estado (`por_hacer`, `haciendo`, `hecho`, `cancelado`).
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### 4. Infraestructura y Herramientas
 
-## Laravel Sponsors
+*   **Laravel:** Framework PHP principal para el backend.
+*   **Vite:** Herramienta de construcción para assets frontend (JavaScript y CSS).
+*   **Tailwind CSS:** Framework CSS para el diseño rápido y responsivo de la interfaz.
+*   **Alpine.js:** Biblioteca JavaScript ligera para la interactividad del frontend (ej. manejo de modales, estados de la barra lateral, toggles).
+*   **Base de Datos:** Utiliza MySQL por defecto (`DB_CONNECTION=mysql`) y tiene migraciones para crear tablas de `users`, `roles`, `permissions`, `tasks`, y sus tablas pivote (`role_user`, `permission_role`).
+*   **Seeders:** Se incluyen seeders para poblar la base de datos con roles, permisos y usuarios de prueba iniciales (Administrador, Profesor).
+*   **Configuración flexible:** Usa archivos `.env` para la configuración de entorno (base de datos, mail, etc.).
+*   **Scripts de Composer:** Incluye scripts útiles como `setup` (instala dependencias y ejecuta migraciones) y `dev` (ejecuta el servidor Laravel, el oyente de colas y Vite concurrently).
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+En resumen, es un sistema completo para la gestión de proyectos y tareas, con un fuerte enfoque en la autorización para diferentes tipos de usuarios y una interfaz moderna y reactiva.
 
-### Premium Partners
+[kanban] Tú: Podrias hacer la documentacion en formato del proyecto ya hacerlo en formato markdown
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+Agente: ¡Claro! Aquí tienes la documentación de tu proyecto "Taskify" en formato Markdown, estructurada para ser fácil de entender y usar.
 
-## Contributing
+---
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+# Taskify: Sistema Kanban de Gestión de Tareas
 
-## Code of Conduct
+## 📋 Descripción del Proyecto
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Taskify es un sistema de gestión de tareas basado en el framework Laravel, diseñado para facilitar la organización y seguimiento de actividades dentro de un equipo. Incorpora un robusto sistema de roles y permisos (RBAC) para controlar el acceso a diferentes funcionalidades, una vista de tablero Kanban para el seguimiento visual de tareas, filtrado dinámico y un dashboard con métricas clave.
 
-## Security Vulnerabilities
+## 🚀 Tecnologías Utilizadas
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### Backend
+*   **PHP**: `^8.2`
+*   **Laravel Framework**: `^12.0`
+*   **Composer**: Gestor de dependencias de PHP.
+*   **Laravel Tinker**: Herramienta de línea de comandos interactiva.
+*   **Laravel Pail**: Herramienta para monitorear logs.
+*   **Laravel Pint**: Estilizador de código PHP.
+*   **Laravel Sail**: Entorno de desarrollo Docker (opcional, no configurado en `composer.json` para `dev`).
+*   **MySQL**: Base de datos principal (configuración por defecto en `.env.example`).
+*   **SQLite**: Opción de base de datos por defecto en `config/database.php` si no se especifica `DB_CONNECTION` en `.env`.
 
-## License
+### Frontend
+*   **Node.js & npm**: Gestor de paquetes de JavaScript.
+*   **Vite**: `^7.0.7` Herramienta de construcción de frontend.
+*   **TailwindCSS**: `^4.0.0` Framework CSS para un desarrollo rápido de UI.
+*   **Alpine.js**: `^3.15.8` Framework JavaScript ligero para interactividad de UI.
+*   **Laravel Vite Plugin**: `^2.0.0` Integración de Vite con Laravel.
+*   **@tailwindcss/vite**: `^4.0.0` Plugin para TailwindCSS con Vite.
+*   **Axios**: `^1.11.0` Cliente HTTP basado en promesas.
+*   **Livewire Sortable**: `^1.0.0` (Aunque Livewire no se usa directamente en los controladores o vistas principales proporcionadas, el paquete está presente).
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### Herramientas de Desarrollo
+*   **Concurrently**: `^9.0.1` Para ejecutar múltiples comandos de forma simultánea (usado en el script `composer dev`).
+*   **Prettier**: `^3.8.1` Formateador de código.
+*   **Prettier Plugin Blade**: `^3.1.4` Plugin para formato de archivos Blade.
+*   **PHPUnit**: `^11.5.3` Framework de testing para PHP.
+
+## 🛠️ Instalación y Configuración
+
+Sigue estos pasos para poner el proyecto en marcha:
+
+### Prerrequisitos
+Asegúrate de tener instalado:
+*   PHP (versión 8.2 o superior)
+*   Composer
+*   Node.js (versión 18 o superior recomendada)
+*   npm (generalmente viene con Node.js)
+*   Una base de datos (MySQL o SQLite).
+
+### Pasos de Instalación
+
+El proyecto incluye un script `setup` en `composer.json` que automatiza la mayoría de los pasos:
+
+1.  **Clonar el Repositorio:**
+    ```bash
+    git clone <URL_DEL_REPOSITORIO> kanban
+    cd kanban
+    ```
+
+2.  **Ejecutar el Script de Setup:**
+    Este comando instalará las dependencias de PHP y Node.js, copiará el archivo `.env.example`, generará la clave de la aplicación, ejecutará las migraciones y sembrará la base de datos, y compilará los activos de frontend.
+    ```bash
+    composer setup
+    ```
+    *   **Nota**: Si utilizas una base de datos MySQL, asegúrate de que tu servidor MySQL esté en ejecución y que los datos en tu archivo `.env` (paso 3) sean correctos antes de ejecutar `composer setup`.
+
+3.  **Configurar el Archivo `.env`:**
+    El script `composer setup` ya debería haber copiado `.env.example` a `.env`. Abre el archivo `.env` y ajusta las variables según tu entorno:
+
+    *   `APP_NAME=Taskify`
+    *   `APP_URL=http://localhost`
+    *   **Base de Datos (MySQL):**
+        ```ini
+        DB_CONNECTION=mysql
+        DB_HOST=127.0.0.1
+        DB_PORT=3306
+        DB_DATABASE=kanban_app # Asegúrate de que esta base de datos exista o sea creada.
+        DB_USERNAME=root
+        DB_PASSWORD=
+        ```
+    *   **Base de Datos (SQLite - si prefieres usarla):**
+        Cambia `DB_CONNECTION=sqlite` y asegúrate de que el archivo `database/database.sqlite` exista (crea uno vacío si no).
+        ```ini
+        DB_CONNECTION=sqlite
+        # DB_URL=
+        DB_DATABASE=/home/cloudboy/repos/kanban/database/database.sqlite # O 'database/database.sqlite'
+        ```
+    *   Asegúrate de que `QUEUE_CONNECTION=database` y `CACHE_STORE=database` para que las colas y el caché persistan en la DB.
+
+### Cómo Correr el Proyecto
+
+Para iniciar el servidor de desarrollo, el oyente de colas y el servidor Vite (frontend) simultáneamente, utiliza el script `dev` de Composer:
+
+```bash
+composer dev
+```
+Esto iniciará:
+*   `php artisan serve`: El servidor web de Laravel.
+*   `php artisan queue:listen --tries=1`: El oyente de colas.
+*   `npm run dev`: El servidor de desarrollo de Vite para los assets de frontend.
+
+Podrás acceder a la aplicación en `http://localhost:8000` (o el puerto que te indique `php artisan serve`).
+
+## 🔑 Autenticación y Autorización (RBAC)
+
+El proyecto implementa un sistema de control de acceso basado en roles y permisos (RBAC) con las siguientes características:
+
+*   **Modelos:** `User`, `Role`, `Permission`.
+*   **Tablas Pivote:** `role_user` (relación Many-to-Many entre usuarios y roles) y `permission_role` (relación Many-to-Many entre roles y permisos).
+*   **Métodos del Modelo `User`:**
+    *   `hasRole(string $role)`: Verifica si el usuario tiene un rol específico (por su `name` slug).
+    *   `hasPermission(string $permission)`: Verifica si el usuario tiene un permiso específico a través de cualquiera de sus roles.
+*   **Gate en `AppServiceProvider`:**
+    *   Se define un `Gate::before` que intercepta todas las comprobaciones de autorización en la aplicación. Si el usuario tiene el permiso requerido a través de sus roles, el acceso es concedido automáticamente.
+*   **Seeders (`DatabaseSeeder.php`):**
+    *   Crea permisos predefinidos: `manage_roles`, `manage_users`, `create_tasks`, `edit_tasks`, `delete_tasks`, `view_all_tasks`, `atender_tareas`, `solicitar_tareas`.
+    *   Crea roles iniciales: `admin` (Administrador) y `profesor` (Profesor).
+    *   Asigna todos los permisos al rol `admin`.
+    *   Asigna permisos básicos de tareas (`create_tasks`, `edit_tasks`, `view_all_tasks`) al rol `profesor`.
+    *   Crea usuarios de prueba: `admin@example.com` (Administrador) y `profesor@example.com` (Profesor), ambos con contraseña `password`.
+*   **Middleware `CheckRole`:** Aunque existe un middleware `app/Http/Middleware/CheckRole.php` definido, las rutas en `routes/web.php` actualmente utilizan closures inline (`auth()->user()->hasPermission(...)`) para la autorización, aprovechando el método `hasPermission` del modelo `User`.
+
+## 📂 Estructura de la Base de Datos (Migraciones Clave)
+
+Las migraciones definen la siguiente estructura principal:
+
+*   **`users`**:
+    *   `id` (PK)
+    *   `name`
+    *   `email` (Unique)
+    *   `password`
+    *   `email_verified_at`, `remember_token`, `timestamps`
+*   **`roles`**:
+    *   `id` (PK)
+    *   `name` (Unique, slug técnico)
+    *   `display_name` (Nombre amigable para mostrar)
+    *   `timestamps`
+*   **`permissions`**:
+    *   `id` (PK)
+    *   `name` (Unique, slug técnico)
+    *   `description` (Descripción amigable)
+    *   `timestamps`
+*   **`role_user`** (Tabla Pivote):
+    *   `id` (PK)
+    *   `role_id` (FK a `roles`, `onDelete('cascade')`)
+    *   `user_id` (FK a `users`, `onDelete('cascade')`)
+    *   `timestamps`
+*   **`permission_role`** (Tabla Pivote):
+    *   `id` (PK)
+    *   `role_id` (FK a `roles`, `onDelete('cascade')`)
+    *   `permission_id` (FK a `permissions`, `onDelete('cascade')`)
+*   **`tasks`**:
+    *   `id` (PK)
+    *   `title` (Requerido)
+    *   `description` (Nullable)
+    *   `due_date` (Nullable, tipo `date`)
+    *   `responsible` (FK *implícita* a `users`, id del usuario responsable)
+    *   `requester` (FK *implícita* a `users`, id del usuario que solicitó la tarea)
+    *   `status` (`enum`: 'por_hacer', 'haciendo', 'hecho', 'cancelado', default 'por_hacer')
+    *   `timestamps`
+
+## ✨ Características Principales
+
+### 1. Dashboard (`DashboardController`)
+*   Muestra **KPIs** (Key Performance Indicators) de tareas:
+    *   **Total de Tareas**
+    *   **Tareas Completadas**
+    *   **Tareas Atrasadas**
+    *   **Usuarios Activos** (solo para administradores)
+*   Las métricas son **globales** para usuarios con permiso `view_all_tasks` (Administrador) y **personales** (solo sus tareas como responsable o solicitante) para otros usuarios.
+*   Incluye un **gráfico de estados de tareas** (por hacer, haciendo, hecho, cancelado) que también se adapta al rol del usuario.
+
+### 2. Gestión de Tareas (`TaskController`)
+*   **Listado de Tareas (`index`):**
+    *   **Filtrado por seguridad:** Los usuarios normales solo ven las tareas donde son `responsible` o `requester`. Los administradores (con `view_all_tasks`) ven todas.
+    *   **Filtros dinámicos:** Búsqueda por título/descripción, filtro por `status` y por `responsible_id`.
+    *   Paginación (`paginate(15)`).
+*   **Vista Kanban:** Las tareas se pueden arrastrar y soltar entre las columnas "Por Hacer", "Haciendo", "Hecho", "Cancelado" en la vista `tasks/index.blade.php`.
+*   **Actualización de Estatus (`updateStatus`):** Un endpoint `PATCH` específico para actualizar el estatus de una tarea vía AJAX, utilizado por la vista Kanban.
+*   **Relaciones:** El modelo `Task` tiene relaciones `BelongsTo` con `User` para `responsibleUser` y `requesterUser`.
+
+### 3. Gestión de Usuarios (`UserController`)
+*   **Listado de Usuarios (`index`):** Muestra todos los usuarios con sus roles asociados.
+*   **Creación de Usuarios (`store`):** Permite crear nuevos usuarios y asignarles **múltiples roles** desde el formulario.
+*   **Actualización de Usuarios (`update`):** Permite modificar los datos del usuario y sus roles asignados.
+*   **Permiso Requerido:** Accesible solo para usuarios con el permiso `manage_users`.
+*   **Frontend:** Interfaz con modales de Alpine.js para creación y edición, incluyendo un generador de contraseñas seguras.
+
+### 4. Gestión de Roles y Permisos (`RoleController`)
+*   **Listado de Roles (`index`):** Muestra todos los roles y los permisos asignados a cada uno.
+*   **Creación de Roles (`store`):** Permite crear nuevos roles y asignarles **múltiples permisos**. El `name` del rol se genera automáticamente como un slug del `display_name`.
+*   **Actualización de Roles (`update`):** Permite modificar el `display_name` y los permisos de un rol existente.
+*   **Permiso Requerido:** Accesible solo para usuarios con el permiso `manage_roles`.
+*   **Frontend:** Interfaz con modales de Alpine.js para creación y edición.
+
+### 5. Frontend Reactivo y Estilizado
+*   **Vite:** Compila y sirve los assets de CSS y JavaScript.
+*   **TailwindCSS 4:** Proporciona un conjunto de clases de utilidad para estilos consistentes.
+    *   Se define un `@theme` en `resources/css/app.css` para fuentes y colores personalizados.
+*   **Alpine.js:** Impulsa la interactividad en el lado del cliente, incluyendo:
+    *   Control de modales (`modal-base.blade.php`).
+    *   Manejo de estados de la UI (ej. sidebar, visibilidad de contraseñas, formularios dinámicos).
+    *   Lógica del tablero Kanban y filtrado.
+    *   Toast notifications (`toasts.blade.php`) para mensajes de éxito/error.
+*   **Diseño Responsivo:** Las vistas están diseñadas para adaptarse a diferentes tamaños de pantalla.
+
+## 📄 Archivos Clave del Proyecto
+
+*   **`routes/web.php`**: Define todas las rutas de la aplicación, incluyendo las rutas públicas de autenticación y las rutas protegidas para el dashboard, tareas, usuarios y roles.
+*   **`app/Models/User.php`**: Modelo de usuario con relaciones `roles()` y métodos `hasRole()` y `hasPermission()`.
+*   **`app/Models/Role.php`**: Modelo de rol con relaciones `users()` y `permissions()`.
+*   **`app/Models/Permission.php`**: Modelo de permiso con relación `roles()`.
+*   **`app/Models/Task.php`**: Modelo de tarea con relaciones `responsibleUser()` y `requesterUser()`.
+*   **`app/Http/Controllers/AuthController.php`**: Maneja el login y logout de usuarios.
+*   **`app/Http/Controllers/DashboardController.php`**: Lógica para el panel de control.
+*   **`app/Http/Controllers/TaskController.php`**: Lógica para la gestión de tareas.
+*   **`app/Http/Controllers/UserController.php`**: Lógica para la gestión de usuarios.
+*   **`app/Http/Controllers/RoleController.php`**: Lógica para la gestión de roles y permisos.
+*   **`app/Providers/AppServiceProvider.php`**: Contiene la definición del Gate para el sistema de permisos.
+*   **`database/seeders/DatabaseSeeder.php`**: Archivo para poblar la base de datos con roles, permisos y usuarios iniciales.
+*   **`resources/views/layouts/test.blade.php`**: Layout principal de la aplicación, que incluye la barra lateral (`aside`) y el manejo global de Alpine.js para el estado de la sidebar y modales.
+*   **`resources/views/welcome.blade.php`**: Vista del formulario de inicio de sesión.
+*   **`resources/views/tasks/index.blade.php`**: Vista principal de gestión de tareas con opciones de tabla y Kanban.
+*   **`resources/views/admin/users/index.blade.php`**: Vista para la gestión de usuarios.
+*   **`resources/views/admin/roles/index.blade.php`**: Vista para la gestión de roles y permisos.
+*   **`resources/css/app.css`**: Archivo principal de estilos de TailwindCSS y configuración del tema.
+*   **`resources/js/app.js`**: Archivo principal de JavaScript que inicializa Alpine.js y `bootstrap.js`.
+
+## 🧪 Tests
+
+El proyecto incluye tests básicos de unidad y de características.
+
+*   Para ejecutar todos los tests:
+    ```bash
+    composer test
+    ```
+    O si prefieres los tests de PHPUnit directamente:
+    ```bash
+    php artisan test
+    ```
+
+## 💡 Consideraciones Adicionales
+
+*   **Middleware `CheckRole`:** Aunque está definido, su uso directo en `web.php` ha sido reemplazado por comprobaciones inline de `hasPermission`. Podría ser refactorizado para utilizar el middleware si se desea una estructura más tradicional.
+*   **Livewire Sortable:** El paquete está instalado, lo que sugiere una posible funcionalidad de Livewire en el futuro, pero no se observa un uso directo en los controladores o vistas principales proporcionadas en este contexto.
+*   **`responsible` y `requester` en `tasks`**: Son columnas de tipo `string` en la migración, pero en la práctica deberían ser `foreignId` a la tabla `users` para garantizar la integridad referencial de la base de datos. Esto sería una mejora importante.
+
+---
