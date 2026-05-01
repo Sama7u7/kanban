@@ -139,9 +139,46 @@
                                                 x-text="task.title"></span>
                                         </td>
                                         <td class="px-3 py-2">
-                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide border"
-                                                :class="getStatusClasses(task.status)"
-                                                x-text="task.status.replace('_', ' ')"></span>
+                                            <div class="relative" x-data="{ open: false }">
+                                                {{-- Badge / Botón --}}
+                                                <button @click.stop="open = !open"
+                                                    class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide border cursor-pointer hover:opacity-80 transition-opacity"
+                                                    :class="getStatusClasses(task.status)">
+                                                    <span x-text="task.status.replace('_', ' ')"></span>
+                                                    <svg class="w-2.5 h-2.5 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" />
+                                                    </svg>
+                                                </button>
+
+                                                {{-- Dropdown --}}
+                                                <div x-show="open" @click.outside="open = false"
+                                                    x-transition:enter="transition ease-out duration-100"
+                                                    x-transition:enter-start="opacity-0 scale-95"
+                                                    x-transition:enter-end="opacity-100 scale-100"
+                                                    x-transition:leave="transition ease-in duration-75"
+                                                    x-transition:leave-start="opacity-100 scale-100"
+                                                    x-transition:leave-end="opacity-0 scale-95"
+                                                    class="absolute left-0 top-full mt-1 z-50 bg-[#1b1b18] border border-gray-700 rounded-lg shadow-xl py-1 min-w-[130px]">
+
+                                                    @foreach ($kanbanColumns as $col)
+                                                        @php
+                                                            $allowedForUser = in_array($col['id'], ['por_hacer', 'cancelado']);
+                                                        @endphp
+                                                        @if ($isWorkerOrAdmin || $allowedForUser)
+                                                            <button type="button"
+                                                                @click.stop="quickStatus(task, '{{ $col['id'] }}'); open = false"
+                                                                class="w-full text-left px-3 py-1.5 text-[11px] font-semibold flex items-center gap-2 hover:bg-gray-800 transition-colors"
+                                                                :class="task.status === '{{ $col['id'] }}' ? 'text-white bg-gray-800/50' : 'text-gray-400'">
+                                                                <span class="w-1.5 h-1.5 rounded-full {{ $col['dot'] }} shrink-0"></span>
+                                                                {{ $col['name'] }}
+                                                                <svg x-show="task.status === '{{ $col['id'] }}'" class="w-3 h-3 ml-auto text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                                                                </svg>
+                                                            </button>
+                                                        @endif
+                                                    @endforeach
+                                                </div>
+                                            </div>
                                         </td>
                                         <td class="px-3 py-2">
                                             <div class="flex items-center gap-1.5">
@@ -515,6 +552,26 @@
                         openViewFromKanban(task) {
                             this.selectedTask = task;
                             this.showViewModal = true;
+                        },
+                        async quickStatus(task, newStatus) {
+                            if (task.status === newStatus) return;
+                            const index = this.tasksList.findIndex(t => t.id === task.id);
+                            if (index === -1) return;
+                            const original = task.status;
+                            this.tasksList[index].status = newStatus;
+                            try {
+                                const resp = await fetch(`/tasks/${task.id}/status`, {
+                                    method: 'PATCH',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                    },
+                                    body: JSON.stringify({ status: newStatus })
+                                });
+                                if (!resp.ok) throw new Error();
+                            } catch (e) {
+                                this.tasksList[index].status = original;
+                            }
                         }
                     }
                 }
