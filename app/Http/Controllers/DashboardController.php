@@ -31,7 +31,7 @@ class DashboardController extends Controller
                                 ->whereNotIn('status', ['hecho', 'cancelado'])
                                 ->where(fn($q) => $q->where('responsible', $user->id)->orWhere('requester', $user->id))
                                 ->count();
-            $activeUsers = 1; 
+            $activeUsers = 1;
         }
 
         // --- 2. EL GRÁFICO (Corregido para Solicitantes) ---
@@ -59,7 +59,7 @@ class DashboardController extends Controller
         if ($isAdmin) {
             $urgentTasks = Task::with(['responsibleUser', 'requesterUser'])
                 ->whereNotIn('status', ['hecho', 'cancelado'])
-                ->orderByRaw("CASE WHEN responsible = {$user->id} THEN 1 ELSE 2 END")
+                ->orderByRaw("CASE WHEN responsible = '{$user->id}' THEN 1 ELSE 2 END")
                 ->orderBy('due_date', 'asc')
                 ->take(5) // <-- Si alguna vez quieres ver más de 5 tareas, cambia o quita este número
                 ->get();
