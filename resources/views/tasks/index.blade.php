@@ -120,95 +120,147 @@
                         <table class="w-full text-white border-collapse">
                             <thead>
                                 <tr class="border-b border-gray-800">
-                                    <th class="px-3 py-2 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest w-16">ID</th>
-                                    <th class="px-3 py-2 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Actividad</th>
-                                    <th class="px-3 py-2 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest w-28">Estatus</th>
-                                    <th class="px-3 py-2 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest w-36">Responsable</th>
-                                    <th class="px-3 py-2 text-center text-[10px] font-bold text-gray-500 uppercase tracking-widest w-20">Acciones</th>
+                                    <th
+                                        class="px-3 py-2 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest w-16">
+                                        ID</th>
+                                    <th
+                                        class="px-3 py-2 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                                        Actividad</th>
+                                    <th
+                                        class="px-3 py-2 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest w-28">
+                                        Estatus</th>
+                                    <th
+                                        class="px-3 py-2 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest w-36">
+                                        Responsable</th>
+                                    <th
+                                        class="px-3 py-2 text-center text-[10px] font-bold text-gray-500 uppercase tracking-widest w-20">
+                                        Acciones</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-800/60">
                                 <template x-for="task in filteredTasks" :key="task.id">
                                     <tr class="hover:bg-[#1b1b18] transition-colors duration-100 group">
+                                        {{-- Task ID --}}
                                         <td class="px-3 py-2">
                                             <span class="text-[11px] font-mono text-gray-600" x-text="'#' + task.id"></span>
                                         </td>
+                                        {{-- Task tittle --}}
                                         <td class="px-3 py-2">
-                                            <span class="text-sm text-gray-200 group-hover:text-white transition-colors font-medium"
-                                                :class="task.status === 'hecho' || task.status === 'cancelado' ? 'line-through text-gray-500' : ''"
+                                            <span
+                                                class="text-sm text-gray-200 group-hover:text-white transition-colors font-medium"
+                                                :class="task.status === 'hecho' || task.status === 'cancelado' ?
+                                                    'line-through text-gray-500' : ''"
                                                 x-text="task.title"></span>
                                         </td>
+                                        {{-- Task Estatus --}}
                                         <td class="px-3 py-2">
                                             <div class="relative" x-data="{ open: false }">
-                                                {{-- Badge / Botón --}}
-                                                <button @click.stop="open = !open"
+                                                {{-- Badge / Botón - Agregamos x-ref --}}
+                                                <button x-ref="statusButton" @click.stop="open = !open"
                                                     class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide border cursor-pointer hover:opacity-80 transition-opacity"
                                                     :class="getStatusClasses(task.status)">
                                                     <span x-text="task.status.replace('_', ' ')"></span>
-                                                    <svg class="w-2.5 h-2.5 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" />
+                                                    <svg class="w-2.5 h-2.5 opacity-60" fill="none"
+                                                        stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="3" d="M19 9l-7 7-7-7" />
                                                     </svg>
                                                 </button>
 
-                                                {{-- Dropdown --}}
-                                                <div x-show="open" @click.outside="open = false"
-                                                    x-transition:enter="transition ease-out duration-100"
-                                                    x-transition:enter-start="opacity-0 scale-95"
-                                                    x-transition:enter-end="opacity-100 scale-100"
-                                                    x-transition:leave="transition ease-in duration-75"
-                                                    x-transition:leave-start="opacity-100 scale-100"
-                                                    x-transition:leave-end="opacity-0 scale-95"
-                                                    class="absolute left-0 top-full mt-1 z-50 bg-[#1b1b18] border border-gray-700 rounded-lg shadow-xl py-1 min-w-[130px]">
+                                                {{-- Dropdown con Teleport y Anchor --}}
+                                                {{-- Dropdown con Teleport y Anchor --}}
+                                                <template x-teleport="body">
+                                                    <div x-show="open" @click.outside="open = false"
+                                                        {{-- Forzamos el anclaje --}}
+                                                        x-anchor.bottom-start.offset.4="$refs.statusButton" x-transition
+                                                        {{-- Importante: 'fixed' o 'absolute' y un z-index muy alto --}}
+                                                        class="fixed z-[9999] bg-[#1b1b18] border border-gray-700 rounded-lg shadow-2xl py-1 min-w-[140px]"
+                                                        style="display: none;">
+                                                        @foreach ($kanbanColumns as $col)
+                                                            @php $allowedForUser = in_array($col['id'], ['por_hacer', 'cancelado']); @endphp
+                                                            @if ($isWorkerOrAdmin || $allowedForUser)
+                                                                <button type="button"
+                                                                    @click.stop="quickStatus(task, '{{ $col['id'] }}'); open = false"
+                                                                    {{-- 
+                                                                       Cambiamos dinámicamente las clases:
+                                                                       - Si es el actual: bg-white/10 y texto blanco
+                                                                       - Si no: texto gris y hover con fondo suave
+                                                                    --}}
+                                                                    class="w-full text-left px-3 py-2 text-[11px] font-semibold flex items-center gap-2 transition-colors"
+                                                                    :class="task.status === '{{ $col['id'] }}' ?
+                                                                        'bg-white/10 text-white' :
+                                                                        'text-gray-400 hover:bg-white/5 hover:text-white'">
+                                                                    <span
+                                                                        class="w-2 h-2 rounded-full {{ $col['dot'] }} shrink-0"></span>
 
-                                                    @foreach ($kanbanColumns as $col)
-                                                        @php
-                                                            $allowedForUser = in_array($col['id'], ['por_hacer', 'cancelado']);
-                                                        @endphp
-                                                        @if ($isWorkerOrAdmin || $allowedForUser)
-                                                            <button type="button"
-                                                                @click.stop="quickStatus(task, '{{ $col['id'] }}'); open = false"
-                                                                class="w-full text-left px-3 py-1.5 text-[11px] font-semibold flex items-center gap-2 hover:bg-gray-800 transition-colors"
-                                                                :class="task.status === '{{ $col['id'] }}' ? 'text-white bg-gray-800/50' : 'text-gray-400'">
-                                                                <span class="w-1.5 h-1.5 rounded-full {{ $col['dot'] }} shrink-0"></span>
-                                                                {{ $col['name'] }}
-                                                                <svg x-show="task.status === '{{ $col['id'] }}'" class="w-3 h-3 ml-auto text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
-                                                                </svg>
-                                                            </button>
-                                                        @endif
-                                                    @endforeach
-                                                </div>
+                                                                    <span class="flex-1">{{ $col['name'] }}</span>
+
+                                                                    {{-- Añadimos un pequeño check si es el seleccionado --}}
+                                                                    <template
+                                                                        x-if="task.status === '{{ $col['id'] }}'">
+                                                                        <svg class="w-3.5 h-3.5 text-blue-400"
+                                                                            fill="none" stroke="currentColor"
+                                                                            viewBox="0 0 24 24">
+                                                                            <path stroke-linecap="round"
+                                                                                stroke-linejoin="round" stroke-width="3"
+                                                                                d="M5 13l4 4L19 7" />
+                                                                        </svg>
+                                                                    </template>
+                                                                </button>
+                                                            @endif
+                                                        @endforeach
+                                                    </div>
+                                                </template>
                                             </div>
                                         </td>
+                                        {{-- Task responsible --}}
                                         <td class="px-3 py-2">
                                             <div class="flex items-center gap-1.5">
                                                 <div class="w-5 h-5 rounded-full bg-indigo-600/80 flex items-center justify-center text-white text-[9px] font-bold shrink-0"
-                                                    x-text="task.responsible_user?.name ? task.responsible_user.name.substring(0,2).toUpperCase() : '?'"></div>
+                                                    x-text="task.responsible_user?.name ? task.responsible_user.name.substring(0,2).toUpperCase() : '?'">
+                                                </div>
                                                 <span class="text-xs text-gray-400 truncate max-w-[100px]"
                                                     x-text="task.responsible_user?.name || 'Sin asignar'"></span>
                                             </div>
                                         </td>
+                                        {{-- Task actions --}}
                                         <td class="px-3 py-2 text-center">
-                                            <div class="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <div
+                                                class="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                 <button @click="openViewFromKanban(task)"
-                                                    class="p-1 text-gray-500 hover:text-indigo-400 transition-colors" title="Ver">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                    class="p-1 text-gray-500 hover:text-indigo-400 transition-colors"
+                                                    title="Ver">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                                     </svg>
                                                 </button>
                                                 <button @click="openEditFromKanban(task)"
-                                                    class="p-1 text-gray-500 hover:text-indigo-400 transition-colors" title="Editar">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                                    class="p-1 text-gray-500 hover:text-indigo-400 transition-colors"
+                                                    title="Editar">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                                                     </svg>
                                                 </button>
                                                 @if ($isAdmin)
-                                                    <form method="POST" :action="`/tasks/${task.id}`" onsubmit="return confirm('¿Eliminar actividad?')">
+                                                    <form method="POST" :action="`/tasks/${task.id}`"
+                                                        onsubmit="return confirm('¿Eliminar actividad?')">
                                                         @csrf @method('DELETE')
-                                                        <button type="submit" class="p-1 text-gray-500 hover:text-red-400 transition-colors" title="Eliminar">
-                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                        <button type="submit"
+                                                            class="p-1 text-gray-500 hover:text-red-400 transition-colors"
+                                                            title="Eliminar">
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                                viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                                    stroke-width="2"
+                                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                                             </svg>
                                                         </button>
                                                     </form>
@@ -225,24 +277,31 @@
                     <div class="lg:hidden divide-y divide-gray-800/60">
                         <template x-for="task in filteredTasks" :key="task.id">
                             <div class="flex items-center justify-between py-3 px-1 gap-3">
-                                <span class="text-sm text-gray-200 font-medium flex-1 truncate" x-text="task.title"></span>
+                                <span class="text-sm text-gray-200 font-medium flex-1 truncate"
+                                    x-text="task.title"></span>
                                 <div class="flex items-center gap-2 shrink-0">
                                     <div class="flex items-center gap-1">
                                         <div class="w-5 h-5 rounded-full bg-indigo-600/80 flex items-center justify-center text-white text-[9px] font-bold"
-                                            x-text="task.responsible_user?.name ? task.responsible_user.name.substring(0,1).toUpperCase() : '?'"></div>
+                                            x-text="task.responsible_user?.name ? task.responsible_user.name.substring(0,1).toUpperCase() : '?'">
+                                        </div>
                                     </div>
                                     <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide border"
                                         :class="getStatusClasses(task.status)"
                                         x-text="task.status.replace('_', ' ')"></span>
-                                    <button @click="openViewFromKanban(task)" class="text-gray-500 hover:text-indigo-400 p-1" title="Ver">
+                                    <button @click="openViewFromKanban(task)"
+                                        class="text-gray-500 hover:text-indigo-400 p-1" title="Ver">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                         </svg>
                                     </button>
-                                    <button @click="openEditFromKanban(task)" class="text-gray-500 hover:text-indigo-400 p-1" title="Editar">
+                                    <button @click="openEditFromKanban(task)"
+                                        class="text-gray-500 hover:text-indigo-400 p-1" title="Editar">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                                         </svg>
                                     </button>
                                 </div>
@@ -285,14 +344,17 @@
 
                                             {{-- FILA SUPERIOR: ID + Botones de acción --}}
                                             <div class="flex items-center justify-between">
-                                                <span class="text-[10px] font-mono text-gray-600" x-text="'#' + task.id"></span>
+                                                <span class="text-[10px] font-mono text-gray-600"
+                                                    x-text="'#' + task.id"></span>
                                                 <div class="flex items-center gap-1.5">
                                                     {{-- Editar --}}
                                                     <button @click.stop="openEditFromKanban(task)"
                                                         class="p-1.5 bg-indigo-600/20 text-indigo-400 rounded-md hover:bg-indigo-600 hover:text-white transition-colors"
                                                         title="Editar">
-                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
+                                                            viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2.5"
                                                                 d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                                                         </svg>
                                                     </button>
@@ -305,8 +367,10 @@
                                                             <button type="submit"
                                                                 class="p-1.5 bg-red-600/20 text-red-400 rounded-md hover:bg-red-600 hover:text-white transition-colors"
                                                                 title="Eliminar">
-                                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+                                                                <svg class="w-3.5 h-3.5" fill="none"
+                                                                    stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                                        stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
                                                                 </svg>
                                                             </button>
                                                         </form>
@@ -325,15 +389,18 @@
                                             </div>
 
                                             {{-- FOOTER: Responsable y Fecha --}}
-                                            <div class="flex justify-between items-center border-t border-gray-800 pt-3 mt-1">
-                                                <div @click="openViewFromKanban(task)" class="flex items-center gap-2 cursor-pointer">
+                                            <div
+                                                class="flex justify-between items-center border-t border-gray-800 pt-3 mt-1">
+                                                <div @click="openViewFromKanban(task)"
+                                                    class="flex items-center gap-2 cursor-pointer">
                                                     <div class="w-6 h-6 rounded-full bg-indigo-600 flex items-center justify-center text-white text-[10px] font-bold"
                                                         x-text="task.responsible_user?.name ? task.responsible_user.name.substring(0,2).toUpperCase() : '??'">
                                                     </div>
                                                     <span class="text-[10px] text-gray-300 font-medium"
                                                         x-text="task.responsible_user?.name ? task.responsible_user.name.split(' ')[0] : 'Sin asignar'"></span>
                                                 </div>
-                                                <div class="bg-gray-900/50 border border-gray-800 px-2 py-0.5 rounded shadow-inner">
+                                                <div
+                                                    class="bg-gray-900/50 border border-gray-800 px-2 py-0.5 rounded shadow-inner">
                                                     <span class="text-[10px] text-gray-400 font-mono"
                                                         x-text="task.due_date ? task.due_date.substring(0, 10).split('-').reverse().join('/') : 'N/A'"></span>
                                                 </div>
@@ -566,7 +633,9 @@
                                         'Content-Type': 'application/json',
                                         'X-CSRF-TOKEN': '{{ csrf_token() }}'
                                     },
-                                    body: JSON.stringify({ status: newStatus })
+                                    body: JSON.stringify({
+                                        status: newStatus
+                                    })
                                 });
                                 if (!resp.ok) throw new Error();
                             } catch (e) {
